@@ -660,20 +660,39 @@ export default class Model {
 
     try {
       this.cancelVideoTimer(videoId);
-      video.pause();
+      
+      // 先停止当前播放，避免冲突
+      if (!video.paused) {
+        video.pause();
+      }
+      
       video.currentTime = 0;
       video.style.display = 'block';
       video.classList.add('playing');
 
-      video.play().then(() => {
-        video.style.opacity = '1';
-        this.activeVideoId = videoId;
-        console.log(`视频 ${videoId} 开始播放`);
-      }).catch((error) => {
-        console.error(`视频 ${videoId} 播放失败:`, error);
-      });
+      // 使用Promise正确处理视频播放
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          // 播放成功
+          video.style.opacity = '1';
+          this.activeVideoId = videoId;
+          console.log(`视频 ${videoId} 开始播放`);
+        }).catch((error) => {
+          // 播放被中断或失败
+          if (error.name === 'AbortError') {
+            console.log(`视频 ${videoId} 播放被中断`);
+          } else {
+            console.error(`视频 ${videoId} 播放失败:`, error);
+          }
+          // 隐藏视频元素
+          this.hideVideoAndShowStillFrame(videoId);
+        });
+      }
     } catch (error) {
       console.error(`视频 ${videoId} 播放异常:`, error);
+      this.hideVideoAndShowStillFrame(videoId);
     }
   }
 
@@ -682,17 +701,25 @@ export default class Model {
     if (!video) return;
 
     try {
+      // 检查视频是否已经在停止状态
       if (video.paused && video.currentTime === 0 && video.style.display === 'none') {
         return;
       }
 
-      video.pause();
+      // 安全地停止视频
+      if (!video.paused) {
+        video.pause();
+      }
+      
       video.currentTime = 0;
       video.classList.remove('playing');
       video.style.opacity = '0';
 
+      // 延迟隐藏，避免与播放操作冲突
       setTimeout(() => {
-        video.style.display = 'none';
+        if (video.paused) { // 确保视频已停止
+          video.style.display = 'none';
+        }
       }, 300);
 
       if (this.activeVideoId === videoId) {
