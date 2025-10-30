@@ -1,12 +1,19 @@
 {
-  "name": "threejstemplate",
+  "name": "distortion-scroll-electron",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "DistortionScroll - 诗意变形效果桌面应用",
+  "main": "main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron-dev": "npm run build && electron .",
+    "build-electron": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --publish=never",
+    "pack": "npm run build && electron-builder --dir"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.7",
@@ -23,5 +30,63 @@
     "glslify": "^7.1.1",
     "gsap": "^3.11.2",
     "three": "^0.145.0"
+  },
+  "devDependencies": {
+    "@types/dat.gui": "^0.7.7",
+    "@types/three": "^0.144.0",
+    "typescript": "^4.6.4",
+    "vite": "^3.1.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.distortionscroll.app",
+    "productName": "DistortionScroll",
+    "directories": {
+      "output": "electron-dist"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/",
+        "to": "dist/",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "dist/favicon/favicon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "dist/favicon/favicon.ico",
+      "category": "public.app-category.graphics-design"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "dist/favicon/favicon.ico",
+      "category": "Graphics"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DistortionScroll"
+    }
   }
 }
